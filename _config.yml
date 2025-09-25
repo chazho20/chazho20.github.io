@@ -1,0 +1,11 @@
+title: "Blog"
+markdown: kramdown
+theme: minima
+plugins: []
+# Use README.md as the homepage
+defaults:
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: home 

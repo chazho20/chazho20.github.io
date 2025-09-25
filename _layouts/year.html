@@ -1,0 +1,33 @@
+---
+layout: default
+---
+<div class="year-page">
+  <header>
+    <h1>{{ page.title | default: page.year }}</h1>
+    <p><a href="/">← 返回首页</a></p>
+  </header>
+
+  {% assign y = page.year %}
+  {% assign lines = site.pages | where: "path", "README.md" | first | content | split: "\n" %}
+  {% assign items = '' | split: '' %}
+  {% for line in lines %}
+    {% assign trimmed = line | strip %}
+    {% if trimmed contains '[' and trimmed contains '](' %}
+      {% assign title_part = trimmed | split: ']' | first | remove: '[' %}
+      {% assign year = title_part | slice: 0,4 %}
+      {% if year == y %}
+        {% assign items = items | push: trimmed %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+
+  {% if items.size == 0 %}
+    <p>暂无该年份内容。</p>
+  {% else %}
+    <ul>
+      {% for item in items %}
+        <li>{{ item | markdownify | strip }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</div> 

@@ -1,0 +1,97 @@
+---
+layout: default
+---
+<div class="home">
+  <header class="home-header">
+    <h1>{{ site.title | default: "Blog" }}</h1>
+  </header>
+
+  {% assign lines = content | split: "\n" %}
+  {% assign items = '' | split: '' %}
+  {% for line in lines %}
+    {% assign trimmed = line | strip %}
+    {% if trimmed contains '[' and trimmed contains '](' %}
+      {% assign items = items | push: trimmed %}
+    {% endif %}
+  {% endfor %}
+
+  {%- comment -%}
+  Build a map year -> array of items. Year is extracted from link title.
+  Title examples: [2024-09-01 My Post](...) or [2023 Some Title](...)
+  We'll parse digits at start (4-digit year) or first 4-digit number in title.
+  {%- endcomment -%}
+
+  {% assign grouped = '{}' | split: '' %}
+  {% assign years = '' | split: '' %}
+
+  {% assign item_year_pairs = '' | split: '' %}
+  {% for item in items %}
+    {%- assign title_part = item | split: ']' | first | remove: '[' -%}
+    {%- assign year = '' -%}
+    {%- if title_part.size >= 4 and title_part | slice: 0,4 | plus: 0 -%}
+      {%- assign year_candidate = title_part | slice: 0,4 -%}
+      {%- if year_candidate >= '1900' and year_candidate <= '2100' -%}
+        {%- assign year = year_candidate -%}
+      {%- endif -%}
+    {%- endif -%}
+    {%- if year == '' -%}
+      {%- comment -%} find first 4-digit number anywhere {%- endcomment -%}
+      {%- assign parts = title_part | split: ' ' -%}
+      {%- for p in parts -%}
+        {%- if p.size >= 4 -%}
+          {%- assign y = p | slice: 0,4 -%}
+          {%- if y >= '1900' and y <= '2100' -%}
+            {%- assign year = y -%}
+            {%- break -%}
+          {%- endif -%}
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endif -%}
+    {%- if year == '' -%}
+      {%- assign year = 'Other' -%}
+    {%- endif -%}
+    {%- assign item_year_pairs = item_year_pairs | push: year | push: item -%}
+  {% endfor %}
+
+  {%- comment -%}
+  Collect unique years in order of first appearance
+  {%- endcomment -%}
+  {% assign seen = '' | split: '' %}
+  {% for i in (0..item_year_pairs.size) %}
+    {% if i modulo 2 == 0 and i < item_year_pairs.size %}
+      {% assign y = item_year_pairs[i] %}
+      {% unless seen contains y %}
+        {% assign seen = seen | push: y %}
+      {% endunless %}
+    {% endif %}
+  {% endfor %}
+  {% assign years = seen %}
+
+  <nav class="year-nav" style="margin: 16px 0;">
+    {% for y in years %}
+      {% if y != 'Other' %}
+        <a href="/years/{{ y }}.html" style="margin-right: 12px;">{{ y }}</a>
+      {% endif %}
+    {% endfor %}
+  </nav>
+
+  {%- comment -%}
+  Render sections per year, preserving original order within each year
+  {%- endcomment -%}
+  {% for y in years %}
+    <section id="year-{{ y }}" style="margin-top: 24px;">
+      <h2>{{ y }}</h2>
+      <ul>
+        {% for j in (0..item_year_pairs.size) %}
+          {% if j modulo 2 == 1 and j < item_year_pairs.size %}
+            {% assign item = item_year_pairs[j] %}
+            {% assign item_y = item_year_pairs[j | minus: 1] %}
+            {% if item_y == y %}
+              <li>{{ item | markdownify | strip }}</li>
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </section>
+  {% endfor %}
+</div> 

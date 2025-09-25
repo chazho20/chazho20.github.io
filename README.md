@@ -1,3 +1,7 @@
+---
+layout: home
+title: Blog
+---
 
 [2025-09-18 数据](http://mp.weixin.qq.com/s?__biz=MzU2NzEwMDc1MA==&mid=2247528414&idx=1&sn=34c6bfddc98818edb177d3cfdea1f480&chksm=fd96fb7320e32f2040dff153fdabdf3ca32c78b2540d8c07967699649d2651a0f11299203260&scene=27#wechat_redirect)
 
