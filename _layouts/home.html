@@ -58,7 +58,7 @@ layout: default
   {%- endcomment -%}
   {% assign seen = '' | split: '' %}
   {% for i in (0..item_year_pairs.size) %}
-    {% if i modulo 2 == 0 and i < item_year_pairs.size %}
+    {% if (i | modulo: 2) == 0 and i < item_year_pairs.size %}
       {% assign y = item_year_pairs[i] %}
       {% unless seen contains y %}
         {% assign seen = seen | push: y %}
@@ -83,7 +83,7 @@ layout: default
       <h2>{{ y }}</h2>
       <ul>
         {% for j in (0..item_year_pairs.size) %}
-          {% if j modulo 2 == 1 and j < item_year_pairs.size %}
+          {% if (j | modulo: 2) == 1 and j < item_year_pairs.size %}
             {% assign item = item_year_pairs[j] %}
             {% assign item_y = item_year_pairs[j | minus: 1] %}
             {% if item_y == y %}
