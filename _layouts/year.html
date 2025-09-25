@@ -24,10 +24,62 @@ layout: default
   {% if items.size == 0 %}
     <p>暂无该年份内容。</p>
   {% else %}
-    <ul>
+    <nav style="margin: 16px 0;">
+      <button id="order-toggle" type="button" style="padding: 4px 10px;">切换为顺序</button>
+    </nav>
+    <ul class="post-list">
       {% for item in items %}
         <li>{{ item | markdownify | strip }}</li>
       {% endfor %}
     </ul>
   {% endif %}
-</div> 
+</div>
+
+<script>
+(function() {
+  function getParam(name) {
+    const m = new RegExp('[?&]'+name+'=([^&#]*)').exec(location.search);
+    return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : null;
+  }
+  function reverseUl(ul) {
+    const items = Array.from(ul.children);
+    for (let i = items.length - 1; i >= 0; i--) {
+      ul.appendChild(items[i]);
+    }
+  }
+  function applyOrder(order) {
+    const ul = document.querySelector('ul.post-list');
+    if (!ul) return;
+    const original = ul.getAttribute('data-original');
+    if (!original) {
+      ul.setAttribute('data-original', ul.innerHTML);
+    } else if (order === 'asc') {
+      ul.innerHTML = original;
+    }
+    if (order === 'desc') {
+      if (ul.getAttribute('data-original')) {
+        ul.innerHTML = ul.getAttribute('data-original');
+      }
+      reverseUl(ul);
+    }
+    const btn = document.getElementById('order-toggle');
+    if (btn) {
+      btn.textContent = order === 'desc' ? '切换为顺序' : '切换为倒序';
+    }
+  }
+  var order = getParam('order') || localStorage.getItem('orderPreference') || 'desc';
+  if (order !== 'asc' && order !== 'desc') order = 'desc';
+  applyOrder(order);
+  var btn = document.getElementById('order-toggle');
+  if (btn) {
+    btn.addEventListener('click', function() {
+      order = (order === 'desc') ? 'asc' : 'desc';
+      localStorage.setItem('orderPreference', order);
+      const url = new URL(location.href);
+      url.searchParams.set('order', order);
+      history.replaceState(null, '', url.toString());
+      applyOrder(order);
+    });
+  }
+})();
+</script> 

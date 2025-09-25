@@ -67,21 +67,24 @@ layout: default
   {% endfor %}
   {% assign years = seen %}
 
-  <nav class="year-nav" style="margin: 16px 0;">
-    {% for y in years %}
-      {% if y != 'Other' %}
-        <a href="/years/{{ y }}.html" style="margin-right: 12px;">{{ y }}</a>
-      {% endif %}
-    {% endfor %}
+  <nav class="year-nav" style="margin: 16px 0; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+    <div>
+      {% for y in years %}
+        {% if y != 'Other' %}
+          <a href="/years/{{ y }}.html" style="margin-right: 12px;">{{ y }}</a>
+        {% endif %}
+      {% endfor %}
+    </div>
+    <button id="order-toggle" type="button" style="padding: 4px 10px;">切换为顺序</button>
   </nav>
 
   {%- comment -%}
-  Render sections per year, preserving original order within each year
+  Render sections per year, preserving original order within each year (client JS may reverse)
   {%- endcomment -%}
   {% for y in years %}
     <section id="year-{{ y }}" style="margin-top: 24px;">
       <h2>{{ y }}</h2>
-      <ul>
+      <ul class="post-list" data-year="{{ y }}">
         {% for j in (0..item_year_pairs.size) %}
           {% if (j | modulo: 2) == 1 and j < item_year_pairs.size %}
             {% assign item = item_year_pairs[j] %}
@@ -94,4 +97,56 @@ layout: default
       </ul>
     </section>
   {% endfor %}
-</div> 
+</div>
+
+<script>
+(function() {
+  function getParam(name) {
+    const m = new RegExp('[?&]'+name+'=([^&#]*)').exec(location.search);
+    return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : null;
+  }
+  function reverseUl(ul) {
+    const items = Array.from(ul.children);
+    for (let i = items.length - 1; i >= 0; i--) {
+      ul.appendChild(items[i]);
+    }
+  }
+  function applyOrder(order) {
+    document.querySelectorAll('ul.post-list').forEach(function(ul) {
+      const original = ul.getAttribute('data-original');
+      if (!original) {
+        ul.setAttribute('data-original', ul.innerHTML);
+      } else if (order === 'asc') {
+        ul.innerHTML = original;
+      }
+      if (order === 'desc') {
+        // ensure we are in ascending first, then reverse to descending
+        if (ul.getAttribute('data-original')) {
+          ul.innerHTML = ul.getAttribute('data-original');
+        }
+        reverseUl(ul);
+      }
+    });
+    const btn = document.getElementById('order-toggle');
+    if (btn) {
+      btn.textContent = order === 'desc' ? '切换为顺序' : '切换为倒序';
+    }
+  }
+
+  var order = getParam('order') || localStorage.getItem('orderPreference') || 'desc';
+  if (order !== 'asc' && order !== 'desc') order = 'desc';
+  applyOrder(order);
+
+  var btn = document.getElementById('order-toggle');
+  if (btn) {
+    btn.addEventListener('click', function() {
+      order = (order === 'desc') ? 'asc' : 'desc';
+      localStorage.setItem('orderPreference', order);
+      const url = new URL(location.href);
+      url.searchParams.set('order', order);
+      history.replaceState(null, '', url.toString());
+      applyOrder(order);
+    });
+  }
+})();
+</script> 
